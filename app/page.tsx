@@ -259,13 +259,13 @@ export default function Home() {
               </div>
               <h2 data-text="Crafting Digital Excellence">Crafting Digital Excellence</h2>
               <p>
-                I'm a passionate full-stack developer with over 5 years of experience creating 
+                I&apos;m a passionate full-stack developer with over 5 years of experience creating 
                 digital solutions that combine beautiful design with robust functionality. 
                 I specialize in modern web technologies and love turning complex problems 
                 into simple, elegant solutions with stunning 3D visual experiences.
               </p>
               <p>
-                When I'm not coding, you can find me exploring new technologies, contributing to 
+                When I&apos;m not coding, you can find me exploring new technologies, contributing to 
                 open-source projects, or sharing knowledge with the developer community. I believe 
                 in continuous learning and staying at the forefront of technology trends, especially 
                 in 3D web development and interactive design.
@@ -427,9 +427,9 @@ export default function Home() {
               <Mail size={16} />
               <span>Get In Touch</span>
             </div>
-            <h2 className="animate-on-scroll" data-text="Let's Work Together">Let's Work Together</h2>
+            <h2 className="animate-on-scroll" data-text="Let&apos;s Work Together">Let&apos;s Work Together</h2>
             <p className="animate-on-scroll">
-              Have a project in mind? I'd love to hear about it. Let's create something amazing together with cutting-edge 3D technology.
+              Have a project in mind? I&apos;d love to hear about it. Let&apos;s create something amazing together with cutting-edge 3D technology.
             </p>
             
             <form className="contact-form animate-on-scroll">
