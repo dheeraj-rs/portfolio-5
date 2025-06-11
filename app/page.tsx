@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { 
   Menu, 
   X, 
@@ -26,26 +26,40 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  // Optimized scroll handler with throttling
+  const handleScroll = useCallback(() => {
+    const scrolled = window.scrollY > 50;
+    if (scrolled !== isScrolled) {
+      setIsScrolled(scrolled);
+    }
+  }, [isScrolled]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+    // Throttled scroll event
+    let ticking = false;
+    const throttledScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
-
+    // Optimized intersection observer
     const observerOptions = {
       threshold: 0.1,
-      rootMargin: '0px 0px -50px 0px'
+      rootMargin: '0px 0px -100px 0px'
     };
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add('animated');
+          // Stop observing once animated to improve performance
+          observer.unobserve(entry.target);
         }
       });
     }, observerOptions);
@@ -53,36 +67,55 @@ export default function Home() {
     const animatedElements = document.querySelectorAll('.animate-on-scroll');
     animatedElements.forEach(el => observer.observe(el));
 
-    // Create particle system
+    // Optimized particle system with fewer particles
     const createParticles = () => {
       const particleContainer = document.createElement('div');
       particleContainer.className = 'particle-system';
       document.body.appendChild(particleContainer);
 
-      for (let i = 0; i < 50; i++) {
+      // Reduced particle count for better performance
+      const particleCount = window.innerWidth < 768 ? 15 : 30;
+      
+      for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
         particle.className = 'particle';
         particle.style.left = Math.random() * 100 + '%';
-        particle.style.animationDelay = Math.random() * 20 + 's';
-        particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+        particle.style.animationDelay = Math.random() * 25 + 's';
+        particle.style.animationDuration = (Math.random() * 10 + 20) + 's';
         particleContainer.appendChild(particle);
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    window.addEventListener('mousemove', handleMouseMove);
-    createParticles();
+    // Add passive event listeners for better performance
+    window.addEventListener('scroll', throttledScroll, { passive: true });
+    
+    // Only create particles on larger screens
+    if (window.innerWidth >= 768) {
+      createParticles();
+    }
     
     return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('scroll', throttledScroll);
       observer.disconnect();
+      // Clean up particles
+      const particleSystem = document.querySelector('.particle-system');
+      if (particleSystem) {
+        particleSystem.remove();
+      }
     };
-  }, []);
+  }, [handleScroll]);
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
     document.documentElement.setAttribute('data-theme', isDarkMode ? 'light' : 'dark');
+  };
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
   };
 
   const skills = [
@@ -124,68 +157,95 @@ export default function Home() {
       {/* Header */}
       <header className={`header ${isScrolled ? 'scrolled' : ''}`}>
         <nav className="nav">
-          <a href="#" className="logo">JohnDoe</a>
+          <a href="#" className="logo">Dheeraj</a>
           
-          <ul className="nav-menu">
-            <li><a href="#home" className="nav-link">Home</a></li>
-            <li><a href="#about" className="nav-link">About</a></li>
-            <li><a href="#skills" className="nav-link">Skills</a></li>
-            <li><a href="#projects" className="nav-link">Projects</a></li>
-            <li><a href="#contact" className="nav-link">Contact</a></li>
+          <ul className={`nav-menu ${isMenuOpen ? 'nav-menu-open' : ''}`}>
+            <li><a href="#home" className="nav-link" onClick={closeMenu}>Home</a></li>
+            <li><a href="#about" className="nav-link" onClick={closeMenu}>About</a></li>
+            <li><a href="#skills" className="nav-link" onClick={closeMenu}>Skills</a></li>
+            <li><a href="#projects" className="nav-link" onClick={closeMenu}>Projects</a></li>
+            <li><a href="#contact" className="nav-link" onClick={closeMenu}>Contact</a></li>
           </ul>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="nav-controls">
             <button className="theme-toggle" onClick={toggleTheme}>
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
             
             <button 
               className="mobile-menu-toggle"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              onClick={toggleMenu}
+              aria-label="Toggle menu"
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </nav>
+
+        {/* Mobile Menu Overlay */}
+        {isMenuOpen && <div className="mobile-menu-overlay" onClick={closeMenu}></div>}
       </header>
 
       {/* Hero Section */}
       <section id="home" className="hero">
         <div className="container">
           <div className="hero-content">
-            <h1 className="hero-title" data-text="John Doe">John Doe</h1>
+            <div className="hero-badge animate-on-scroll">
+              <Zap size={16} />
+              <span>Available for new projects</span>
+            </div>
+            <h1 className="hero-title" data-text="Dheeraj">Dheeraj</h1>
             <p className="hero-subtitle">Full Stack Developer & UI/UX Designer</p>
             <p className="hero-description">
               I create beautiful, functional, and user-centered digital experiences that solve real-world problems with cutting-edge 3D animations and interactive design.
             </p>
             <div className="hero-cta">
               <a href="#projects" className="btn btn-primary">
-                View My Work <ArrowRight size={20} />
+                <span>View My Work</span>
+                <ArrowRight size={20} />
               </a>
               <a href="#contact" className="btn btn-secondary">
-                Get In Touch
+                <span>Get In Touch</span>
               </a>
+            </div>
+            <div className="hero-stats">
+              <div className="stat-item">
+                <div className="stat-number">5+</div>
+                <div className="stat-label">Years Experience</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-number">50+</div>
+                <div className="stat-label">Projects Completed</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-number">100%</div>
+                <div className="stat-label">Client Satisfaction</div>
+              </div>
             </div>
           </div>
         </div>
 
         <div className="floating-elements">
-          <div className="floating-element" style={{ '--z-depth': '100px' } as React.CSSProperties}>
-            <div className="geometric-shape"></div>
+          <div className="floating-element floating-element-1">
+            <div className="geometric-shape shape-cube"></div>
           </div>
-          <div className="floating-element" style={{ '--z-depth': '150px' } as React.CSSProperties}>
-            <div className="circle"></div>
+          <div className="floating-element floating-element-2">
+            <div className="geometric-shape shape-sphere"></div>
           </div>
-          <div className="floating-element" style={{ '--z-depth': '80px' } as React.CSSProperties}>
-            <div className="triangle"></div>
+          <div className="floating-element floating-element-3">
+            <div className="geometric-shape shape-pyramid"></div>
           </div>
-          <div className="floating-element" style={{ '--z-depth': '120px' } as React.CSSProperties}>
-            <div className="hexagon"></div>
+          <div className="floating-element floating-element-4">
+            <div className="geometric-shape shape-torus"></div>
           </div>
-          <div className="floating-element" style={{ '--z-depth': '90px' } as React.CSSProperties}>
-            <div className="diamond"></div>
+          <div className="floating-element floating-element-5">
+            <div className="geometric-shape shape-octahedron"></div>
           </div>
         </div>
+        {/* <div className="hero-scroll-indicator">
+          <span>Scroll to explore</span>
+          <div className="scroll-line"></div>
+        </div> */}
       </section>
 
       {/* About Section */}
@@ -193,38 +253,61 @@ export default function Home() {
         <div className="container">
           <div className="about-content">
             <div className="about-text animate-on-scroll">
-              <h2 data-text="About Me">About Me</h2>
+              <div className="section-badge">
+                <Star size={16} />
+                <span>About Me</span>
+              </div>
+              <h2 data-text="Crafting Digital Excellence">Crafting Digital Excellence</h2>
               <p>
-                I&apos;m a passionate full-stack developer with over 5 years of experience creating 
+                I'm a passionate full-stack developer with over 5 years of experience creating 
                 digital solutions that combine beautiful design with robust functionality. 
                 I specialize in modern web technologies and love turning complex problems 
                 into simple, elegant solutions with stunning 3D visual experiences.
               </p>
               <p>
-                When I&apos;m not coding, you can find me exploring new technologies, contributing to 
+                When I'm not coding, you can find me exploring new technologies, contributing to 
                 open-source projects, or sharing knowledge with the developer community. I believe 
                 in continuous learning and staying at the forefront of technology trends, especially 
                 in 3D web development and interactive design.
               </p>
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', flexWrap: 'wrap' }}>
-                <a href="/resume.pdf" className="btn btn-primary">
-                  <Download size={20} /> Download Resume
-                </a>
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Star size={16} style={{ color: 'var(--accent-color)' }} />
-                    <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>5+ Years Experience</span>
+              <div className="about-features">
+                <div className="feature-item">
+                  <div className="feature-icon">
+                    <Code size={20} />
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Zap size={16} style={{ color: 'var(--primary-color)' }} />
-                    <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>50+ Projects</span>
+                  <div className="feature-content">
+                    <h4>Clean Code</h4>
+                    <p>Writing maintainable, scalable code</p>
                   </div>
                 </div>
+                <div className="feature-item">
+                  <div className="feature-icon">
+                    <Layers size={20} />
+                  </div>
+                  <div className="feature-content">
+                    <h4>3D Design</h4>
+                    <p>Creating immersive experiences</p>
+                  </div>
+                </div>
+              </div>
+              <div className="about-actions">
+                <a href="/resume.pdf" className="btn btn-primary">
+                  <Download size={20} />
+                  <span>Download Resume</span>
+                </a>
               </div>
             </div>
             <div className="about-image animate-on-scroll">
               <div className="about-image-container">
                 <div className="about-image-inner"></div>
+                <div className="image-overlay">
+                  <div className="overlay-content">
+                    <div className="overlay-icon">
+                      <Layers size={24} />
+                    </div>
+                    <p>Passionate about creating amazing digital experiences</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -234,8 +317,12 @@ export default function Home() {
       {/* Skills Section */}
       <section id="skills" className="section">
         <div className="container">
-          <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-            <h2 className="animate-on-scroll" data-text="Skills & Expertise">Skills & Expertise</h2>
+          <div className="section-header">
+            <div className="section-badge animate-on-scroll">
+              <Zap size={16} />
+              <span>Skills & Expertise</span>
+            </div>
+            <h2 className="animate-on-scroll" data-text="What I Do Best">What I Do Best</h2>
             <p className="animate-on-scroll">
               Technologies and tools I work with to bring ideas to life with stunning 3D experiences
             </p>
@@ -243,23 +330,31 @@ export default function Home() {
           
           <div className="skills-grid">
             {skills.map((skill, index) => (
-              <div key={skill.name} className="skill-card animate-on-scroll card-3d glass" style={{ animationDelay: `${index * 0.1}s` }}>
+              <div key={skill.name} className="skill-card animate-on-scroll glass" style={{ animationDelay: `${index * 0.1}s` }}>
                 <div className="skill-card-content">
-                  <div className="skill-icon">
-                    {skill.icon}
+                  <div className="skill-header">
+                    <div className="skill-icon">
+                      {skill.icon}
+                    </div>
+                    <div className="skill-info">
+                      <h3>{skill.name}</h3>
+                      <p>{skill.description}</p>
+                    </div>
                   </div>
-                  <h3>{skill.name}</h3>
-                  <p>{skill.description}</p>
                   <div className="skill-progress">
-                    <div 
-                      className="skill-progress-bar" 
-                      style={{ '--progress-width': `${skill.progress}%`, width: `${skill.progress}%` } as React.CSSProperties}
-                    ></div>
+                    <div className="progress-label">
+                      <span>Proficiency</span>
+                      <span>{skill.progress}%</span>
+                    </div>
+                    <div className="progress-track">
+                      <div 
+                        className="skill-progress-bar" 
+                        style={{ width: `${skill.progress}%` }}
+                      ></div>
+                    </div>
                   </div>
-                  <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '0.5rem', display: 'block' }}>
-                    {skill.progress}%
-                  </span>
                 </div>
+                <div className="skill-card-glow"></div>
               </div>
             ))}
           </div>
@@ -267,10 +362,14 @@ export default function Home() {
       </section>
 
       {/* Projects Section */}
-      <section id="projects" className="section" style={{ background: 'var(--bg-secondary)' }}>
+      <section id="projects" className="section projects-section">
         <div className="container">
-          <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-            <h2 className="animate-on-scroll" data-text="Featured Projects">Featured Projects</h2>
+          <div className="section-header">
+            <div className="section-badge animate-on-scroll">
+              <Layers size={16} />
+              <span>Featured Work</span>
+            </div>
+            <h2 className="animate-on-scroll" data-text="Recent Projects">Recent Projects</h2>
             <p className="animate-on-scroll">
               A selection of my recent work that showcases my skills in 3D design and interactive development
             </p>
@@ -278,18 +377,20 @@ export default function Home() {
           
           <div className="projects-grid">
             {projects.map((project, index) => (
-              <div key={project.title} className="project-card animate-on-scroll card-3d glass" style={{ animationDelay: `${index * 0.2}s` }}>
-                <div className="project-image" style={{ backgroundImage: `url(${project.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                  <div style={{ 
-                    position: 'absolute', 
-                    top: '1rem', 
-                    right: '1rem', 
-                    background: 'rgba(255, 255, 255, 0.9)', 
-                    borderRadius: '50%', 
-                    padding: '0.5rem',
-                    transform: 'translateZ(20px)'
-                  }}>
-                    <Layers size={16} style={{ color: 'var(--primary-color)' }} />
+              <div key={project.title} className="project-card animate-on-scroll glass" style={{ animationDelay: `${index * 0.2}s` }}>
+                <div className="project-image" style={{ backgroundImage: `url(${project.image})` }}>
+                  <div className="project-overlay">
+                    <div className="project-actions">
+                      <a href={project.github} className="project-action">
+                        <Github size={20} />
+                      </a>
+                      <a href={project.live} className="project-action">
+                        <ExternalLink size={20} />
+                      </a>
+                    </div>
+                  </div>
+                  <div className="project-badge">
+                    <Layers size={16} />
                   </div>
                 </div>
                 <div className="project-content">
@@ -302,13 +403,16 @@ export default function Home() {
                   </div>
                   <div className="project-links">
                     <a href={project.github} className="project-link">
-                      <Github size={16} /> Code
+                      <Github size={16} />
+                      <span>Code</span>
                     </a>
                     <a href={project.live} className="project-link">
-                      <ExternalLink size={16} /> Live Demo
+                      <ExternalLink size={16} />
+                      <span>Live Demo</span>
                     </a>
                   </div>
                 </div>
+                <div className="project-card-glow"></div>
               </div>
             ))}
           </div>
@@ -319,26 +423,37 @@ export default function Home() {
       <section id="contact" className="contact section">
         <div className="container">
           <div className="contact-content">
-            <h2 className="animate-on-scroll" data-text="Let&apos;s Work Together">Let&apos;s Work Together</h2>
+            <div className="section-badge animate-on-scroll">
+              <Mail size={16} />
+              <span>Get In Touch</span>
+            </div>
+            <h2 className="animate-on-scroll" data-text="Let's Work Together">Let's Work Together</h2>
             <p className="animate-on-scroll">
-              Have a project in mind? I&apos;d love to hear about it. Let&apos;s create something amazing together with cutting-edge 3D technology.
+              Have a project in mind? I'd love to hear about it. Let's create something amazing together with cutting-edge 3D technology.
             </p>
             
             <form className="contact-form animate-on-scroll">
-              <div className="form-group">
-                <input type="text" className="form-input" placeholder="Your Name" required />
-              </div>
-              <div className="form-group">
-                <input type="email" className="form-input" placeholder="Your Email" required />
+              <div className="form-row">
+                <div className="form-group">
+                  <input type="text" className="form-input" placeholder="Your Name" required />
+                  <div className="input-glow"></div>
+                </div>
+                <div className="form-group">
+                  <input type="email" className="form-input" placeholder="Your Email" required />
+                  <div className="input-glow"></div>
+                </div>
               </div>
               <div className="form-group">
                 <input type="text" className="form-input" placeholder="Subject" required />
+                <div className="input-glow"></div>
               </div>
               <div className="form-group">
                 <textarea className="form-textarea" placeholder="Tell me about your project and how we can bring it to life with 3D magic..." required></textarea>
+                <div className="input-glow"></div>
               </div>
               <button type="submit" className="btn btn-primary form-submit">
-                <Send size={20} /> Send Message
+                <Send size={20} />
+                <span>Send Message</span>
               </button>
             </form>
           </div>
@@ -348,20 +463,26 @@ export default function Home() {
       {/* Footer */}
       <footer className="footer">
         <div className="container">
-          <div className="social-links">
-            <a href="#" className="social-link">
-              <Github size={24} />
-            </a>
-            <a href="#" className="social-link">
-              <Linkedin size={24} />
-            </a>
-            <a href="#" className="social-link">
-              <Mail size={24} />
-            </a>
+          <div className="footer-content">
+            <div className="footer-brand">
+              <div className="logo">Dheeraj</div>
+              <p>Creating digital experiences that inspire and engage.</p>
+            </div>
+            <div className="social-links">
+              <a href="#" className="social-link">
+                <Github size={24} />
+              </a>
+              <a href="#" className="social-link">
+                <Linkedin size={24} />
+              </a>
+              <a href="#" className="social-link">
+                <Mail size={24} />
+              </a>
+            </div>
           </div>
-          <p style={{ color: 'var(--text-secondary)' }}>
-            © 2024 John Doe. All rights reserved. Built with Next.js, 3D CSS transforms, and lots of ❤️
-          </p>
+          <div className="footer-bottom">
+            <p>© 2025 Dheeraj. All rights reserved. Built with Next.js, 3D CSS transforms, and lots of ❤️</p>
+          </div>
         </div>
       </footer>
     </div>
