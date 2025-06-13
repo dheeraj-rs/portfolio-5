@@ -27,7 +27,7 @@ export default function Home() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Optimized scroll handler with throttling
+  // Ultra-smooth scroll handler with RAF optimization
   const handleScroll = useCallback(() => {
     const scrolled = window.scrollY > 50;
     if (scrolled !== isScrolled) {
@@ -36,9 +36,13 @@ export default function Home() {
   }, [isScrolled]);
 
   useEffect(() => {
-    // Throttled scroll event
+    // Enable smooth scrolling
+    document.documentElement.style.scrollBehavior = 'smooth';
+    document.body.style.scrollBehavior = 'smooth';
+
+    // Ultra-smooth scroll with RAF
     let ticking = false;
-    const throttledScroll = () => {
+    const smoothScroll = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
           handleScroll();
@@ -48,17 +52,16 @@ export default function Home() {
       }
     };
 
-    // Optimized intersection observer
+    // Enhanced intersection observer with better performance
     const observerOptions = {
       threshold: 0.1,
-      rootMargin: '0px 0px -100px 0px'
+      rootMargin: '0px 0px -50px 0px'
     };
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add('animated');
-          // Stop observing once animated to improve performance
           observer.unobserve(entry.target);
         }
       });
@@ -67,14 +70,13 @@ export default function Home() {
     const animatedElements = document.querySelectorAll('.animate-on-scroll');
     animatedElements.forEach(el => observer.observe(el));
 
-    // Optimized particle system with fewer particles
+    // Optimized particle system
     const createParticles = () => {
       const particleContainer = document.createElement('div');
       particleContainer.className = 'particle-system';
       document.body.appendChild(particleContainer);
 
-      // Reduced particle count for better performance
-      const particleCount = window.innerWidth < 768 ? 15 : 30;
+      const particleCount = window.innerWidth < 768 ? 8 : 15;
       
       for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
@@ -86,22 +88,44 @@ export default function Home() {
       }
     };
 
-    // Add passive event listeners for better performance
-    window.addEventListener('scroll', throttledScroll, { passive: true });
+    // Enhanced bubble system
+    const createBubbles = () => {
+      const bubbleContainer = document.createElement('div');
+      bubbleContainer.className = 'bubble-container';
+      document.body.appendChild(bubbleContainer);
+
+      const bubbleCount = window.innerWidth < 768 ? 3 : 8;
+      
+      for (let i = 0; i < bubbleCount; i++) {
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        const size = Math.random() * 15 + 8;
+        bubble.style.width = size + 'px';
+        bubble.style.height = size + 'px';
+        bubble.style.left = Math.random() * 100 + '%';
+        bubble.style.animationDelay = Math.random() * 15 + 's';
+        bubble.style.animationDuration = (Math.random() * 5 + 12) + 's';
+        bubbleContainer.appendChild(bubble);
+      }
+    };
+
+    // Passive scroll listener for better performance
+    window.addEventListener('scroll', smoothScroll, { passive: true });
     
-    // Only create particles on larger screens
+    // Create effects only on larger screens for performance
     if (window.innerWidth >= 768) {
       createParticles();
+      createBubbles();
     }
     
     return () => {
-      window.removeEventListener('scroll', throttledScroll);
+      window.removeEventListener('scroll', smoothScroll);
       observer.disconnect();
-      // Clean up particles
+      // Clean up effects
       const particleSystem = document.querySelector('.particle-system');
-      if (particleSystem) {
-        particleSystem.remove();
-      }
+      const bubbleSystem = document.querySelector('.bubble-container');
+      if (particleSystem) particleSystem.remove();
+      if (bubbleSystem) bubbleSystem.remove();
     };
   }, [handleScroll]);
 
@@ -116,6 +140,19 @@ export default function Home() {
 
   const closeMenu = () => {
     setIsMenuOpen(false);
+  };
+
+  // Smooth scroll to section
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start',
+        inline: 'nearest'
+      });
+    }
+    closeMenu();
   };
 
   const skills = [
@@ -153,18 +190,18 @@ export default function Home() {
   ];
 
   return (
-    <div>
+    <div className="smooth-scroll">
       {/* Header */}
       <header className={`header ${isScrolled ? 'scrolled' : ''}`}>
         <nav className="nav">
           <a href="#" className="logo">Dheeraj</a>
           
           <ul className={`nav-menu ${isMenuOpen ? 'nav-menu-open' : ''}`}>
-            <li><a href="#home" className="nav-link" onClick={closeMenu}>Home</a></li>
-            <li><a href="#about" className="nav-link" onClick={closeMenu}>About</a></li>
-            <li><a href="#skills" className="nav-link" onClick={closeMenu}>Skills</a></li>
-            <li><a href="#projects" className="nav-link" onClick={closeMenu}>Projects</a></li>
-            <li><a href="#contact" className="nav-link" onClick={closeMenu}>Contact</a></li>
+            <li><button onClick={() => scrollToSection('home')} className="nav-link">Home</button></li>
+            <li><button onClick={() => scrollToSection('about')} className="nav-link">About</button></li>
+            <li><button onClick={() => scrollToSection('skills')} className="nav-link">Skills</button></li>
+            <li><button onClick={() => scrollToSection('projects')} className="nav-link">Projects</button></li>
+            <li><button onClick={() => scrollToSection('contact')} className="nav-link">Contact</button></li>
           </ul>
 
           <div className="nav-controls">
@@ -187,7 +224,7 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section id="home" className="hero">
+      <section id="home" className="hero liquid-bg">
         <div className="container">
           <div className="hero-content">
             <div className="hero-badge animate-on-scroll">
@@ -200,24 +237,24 @@ export default function Home() {
               I create beautiful, functional, and user-centered digital experiences that solve real-world problems with cutting-edge 3D animations and interactive design.
             </p>
             <div className="hero-cta">
-              <a href="#projects" className="btn btn-primary">
+              <button onClick={() => scrollToSection('projects')} className="btn btn-primary">
                 <span>View My Work</span>
                 <ArrowRight size={20} />
-              </a>
-              <a href="#contact" className="btn btn-secondary">
+              </button>
+              <button onClick={() => scrollToSection('contact')} className="btn btn-secondary">
                 <span>Get In Touch</span>
-              </a>
+              </button>
             </div>
             <div className="hero-stats">
-              <div className="stat-item">
+              <div className="stat-item glass">
                 <div className="stat-number">5+</div>
                 <div className="stat-label">Years Experience</div>
               </div>
-              <div className="stat-item">
+              <div className="stat-item glass">
                 <div className="stat-number">50+</div>
                 <div className="stat-label">Projects Completed</div>
               </div>
-              <div className="stat-item">
+              <div className="stat-item glass">
                 <div className="stat-number">100%</div>
                 <div className="stat-label">Client Satisfaction</div>
               </div>
@@ -242,14 +279,15 @@ export default function Home() {
             <div className="geometric-shape shape-octahedron"></div>
           </div>
         </div>
-        {/* <div className="hero-scroll-indicator">
-          <span>Scroll to explore</span>
+
+        <div className="hero-scroll-indicator">
           <div className="scroll-line"></div>
-        </div> */}
+          <span>Scroll to explore</span>
+        </div>
       </section>
 
       {/* About Section */}
-      <section id="about" className="about section">
+      <section id="about" className="about section liquid-bg">
         <div className="container">
           <div className="about-content">
             <div className="about-text animate-on-scroll">
@@ -271,7 +309,7 @@ export default function Home() {
                 in 3D web development and interactive design.
               </p>
               <div className="about-features">
-                <div className="feature-item">
+                <div className="feature-item glass">
                   <div className="feature-icon">
                     <Code size={20} />
                   </div>
@@ -280,7 +318,7 @@ export default function Home() {
                     <p>Writing maintainable, scalable code</p>
                   </div>
                 </div>
-                <div className="feature-item">
+                <div className="feature-item glass">
                   <div className="feature-icon">
                     <Layers size={20} />
                   </div>
@@ -298,7 +336,7 @@ export default function Home() {
               </div>
             </div>
             <div className="about-image animate-on-scroll">
-              <div className="about-image-container">
+              <div className="about-image-container glass">
                 <div className="about-image-inner"></div>
                 <div className="image-overlay">
                   <div className="overlay-content">
@@ -315,7 +353,7 @@ export default function Home() {
       </section>
 
       {/* Skills Section */}
-      <section id="skills" className="section">
+      <section id="skills" className="section liquid-bg">
         <div className="container">
           <div className="section-header">
             <div className="section-badge animate-on-scroll">
@@ -362,7 +400,7 @@ export default function Home() {
       </section>
 
       {/* Projects Section */}
-      <section id="projects" className="section projects-section">
+      <section id="projects" className="section projects-section liquid-bg">
         <div className="container">
           <div className="section-header">
             <div className="section-badge animate-on-scroll">
@@ -420,7 +458,7 @@ export default function Home() {
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="contact section">
+      <section id="contact" className="contact section liquid-bg">
         <div className="container">
           <div className="contact-content">
             <div className="section-badge animate-on-scroll">
@@ -435,20 +473,20 @@ export default function Home() {
             <form className="contact-form animate-on-scroll">
               <div className="form-row">
                 <div className="form-group">
-                  <input type="text" className="form-input" placeholder="Your Name" required />
+                  <input type="text" className="form-input glass" placeholder="Your Name" required />
                   <div className="input-glow"></div>
                 </div>
                 <div className="form-group">
-                  <input type="email" className="form-input" placeholder="Your Email" required />
+                  <input type="email" className="form-input glass" placeholder="Your Email" required />
                   <div className="input-glow"></div>
                 </div>
               </div>
               <div className="form-group">
-                <input type="text" className="form-input" placeholder="Subject" required />
+                <input type="text" className="form-input glass" placeholder="Subject" required />
                 <div className="input-glow"></div>
               </div>
               <div className="form-group">
-                <textarea className="form-textarea" placeholder="Tell me about your project and how we can bring it to life with 3D magic..." required></textarea>
+                <textarea className="form-textarea glass" placeholder="Tell me about your project and how we can bring it to life with 3D magic..." required></textarea>
                 <div className="input-glow"></div>
               </div>
               <button type="submit" className="btn btn-primary form-submit">
@@ -461,7 +499,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="footer">
+      <footer className="footer liquid-bg">
         <div className="container">
           <div className="footer-content">
             <div className="footer-brand">
