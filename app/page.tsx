@@ -197,11 +197,16 @@ export default function Home() {
           <a href="#" className="logo">Dheeraj</a>
           
           <ul className={`nav-menu ${isMenuOpen ? 'nav-menu-open' : ''}`}>
-            <li><button onClick={() => scrollToSection('home')} className="nav-link">Home</button></li>
+            {/* <li><button onClick={() => scrollToSection('home')} className="nav-link">Home</button></li>
             <li><button onClick={() => scrollToSection('about')} className="nav-link">About</button></li>
             <li><button onClick={() => scrollToSection('skills')} className="nav-link">Skills</button></li>
             <li><button onClick={() => scrollToSection('projects')} className="nav-link">Projects</button></li>
-            <li><button onClick={() => scrollToSection('contact')} className="nav-link">Contact</button></li>
+            <li><button onClick={() => scrollToSection('contact')} className="nav-link">Contact</button></li> */}
+            <li><a href="#home" className="nav-link" onClick={closeMenu}>Home</a></li>
+            <li><a href="#about" className="nav-link" onClick={closeMenu}>About</a></li>
+            <li><a href="#skills" className="nav-link" onClick={closeMenu}>Skills</a></li>
+            <li><a href="#projects" className="nav-link" onClick={closeMenu}>Projects</a></li>
+            <li><a href="#contact" className="nav-link" onClick={closeMenu}>Contact</a></li>
           </ul>
 
           <div className="nav-controls">
@@ -218,8 +223,6 @@ export default function Home() {
             </button>
           </div>
         </nav>
-
-        {/* Mobile Menu Overlay */}
         {isMenuOpen && <div className="mobile-menu-overlay" onClick={closeMenu}></div>}
       </header>
 
@@ -282,7 +285,7 @@ export default function Home() {
 
         <div className="hero-scroll-indicator">
           <div className="scroll-line"></div>
-          <span>Scroll to explore</span>
+          {/* <span>Scroll to explore</span> */}
         </div>
       </section>
 
